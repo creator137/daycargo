@@ -1,0 +1,71 @@
+services:
+  app:
+    user: "1000:1000"
+    build:
+      context: .
+      dockerfile: .docker/app/Dockerfile
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_started
+
+  # ⬇️ новый сервис для Vite (dev) / сборки (prod)
+  node:
+    image: node:20-alpine
+    working_dir: /var/www/html
+    user: "node"                       # не root → нормальные права в node_modules
+    environment:
+      NPM_CONFIG_CACHE: /var/www/html/.npm
+      CHOKIDAR_USEPOLLING: "1"         # стабильный watch на volume
+    volumes:
+      - ./src:/var/www/html
+    command: sh -lc "npm ci && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: cargo_taxi
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot | grep 'mysqld is alive' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  db_data:

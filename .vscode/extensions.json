@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "bmewburn.vscode-intelephense-client",
+    "onecentlin.laravel-blade",
+    "shufo.vscode-blade-formatter",
+    "amiralizadeh9480.laravel-extra-intellisense",
+    "ms-azuretools.vscode-docker",
+    "EditorConfig.EditorConfig",
+    "ryannaddy.laravel-artisan"
+  ]
+}
