@@ -1,0 +1,5 @@
+
+# Local dev artifacts
+src/.npm/
+src/.lesshst
+src/storage/.config/

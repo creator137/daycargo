@@ -7,16 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('referrals', function (Blueprint $t) {
-            $t->id();
-            $t->foreignId('referrer_id')->constrained('clients')->cascadeOnDelete(); // кто пригласил
-            $t->foreignId('referee_id')->nullable()->constrained('clients')->nullOnDelete(); // приглашённый (после регистрации)
-            $t->string('code')->index(); // реф-код (можно совпадать у разных, если стратегия иная)
-            $t->enum('status', ['pending', 'registered', 'rewarded'])->default('pending')->index();
-            $t->timestamp('bonus_awarded_at')->nullable();
-            $t->json('meta')->nullable();
-            $t->timestamps();
-            $t->index(['code', 'status']);
+        // Если таблица уже существует — ничего не делаем
+        if (Schema::hasTable('referrals')) {
+            return;
+        }
+
+        Schema::create('referrals', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('referrer_id')->constrained('clients')->cascadeOnDelete();
+            $table->foreignId('referee_id')->constrained('clients')->cascadeOnDelete();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->decimal('reward_points', 10, 2)->default(0);
+            $table->timestamp('approved_at')->nullable();
+            $table->json('meta')->nullable();
+            $table->timestamps();
+
+            $table->index(['referrer_id', 'referee_id']);
         });
     }
 

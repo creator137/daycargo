@@ -7,18 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('promo_code_redemptions', function (Blueprint $t) {
-            $t->id();
-            $t->foreignId('promo_code_id')->constrained()->cascadeOnDelete();
-            $t->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $t->enum('status', ['applied', 'rejected'])->default('applied')->index();
-            $t->string('reason', 500)->nullable();  // причина отказа (если rejected)
-            $t->decimal('amount', 12, 2)->default(0); // начисленные бонусы (если применимо)
-            $t->unsignedBigInteger('order_id')->nullable(); // позже свяжем с заказом
-            $t->foreignId('performed_by')->nullable()->constrained('users')->nullOnDelete();
-            $t->json('meta')->nullable();
-            $t->timestamps();
-            $t->index(['promo_code_id', 'client_id']);
+        // Если таблица уже существует — ничего не делаем
+        if (Schema::hasTable('promo_code_redemptions')) {
+            return;
+        }
+
+        Schema::create('promo_code_redemptions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('promo_code_id')->constrained('promo_codes')->cascadeOnDelete();
+            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
+            $table->enum('status', ['applied', 'pending', 'rejected'])->default('applied');
+            $table->decimal('applied_amount', 12, 2)->default(0);
+            $table->string('order_uid')->nullable();
+            $table->json('meta')->nullable();
+            $table->timestamps();
+
+            $table->index(['promo_code_id', 'client_id']);
         });
     }
 

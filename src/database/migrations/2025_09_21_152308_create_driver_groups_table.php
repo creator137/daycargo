@@ -24,7 +24,7 @@ return new class extends Migration {
             });
         }
 
-        // Создаём pivot и/или гарантируем наличие уникального индекса
+        // Пивот-таблица и уникальный индекс
         if (! Schema::hasTable('driver_group_client_tariff')) {
             Schema::create('driver_group_client_tariff', function (Blueprint $t) {
                 $t->id();
@@ -33,7 +33,7 @@ return new class extends Migration {
                 $t->foreignId('client_tariff_id')
                     ->constrained('client_tariffs')->cascadeOnDelete();
 
-                // короткое имя индекса — чтобы не упираться в лимит 64 символа
+                // короткое имя индекса, чтобы не упираться в лимит 64 символа
                 $t->unique(
                     ['driver_group_id', 'client_tariff_id'],
                     'dg_ct_unique'
@@ -42,11 +42,8 @@ return new class extends Migration {
                 $t->timestamps();
             });
         } else {
-            // Таблица уже существует (как на твоём stage) — просто добавим индекс,
-            // если его ещё нет
+            // Таблица уже есть (как на stage) — добавляем/гарантируем индекс
             Schema::table('driver_group_client_tariff', function (Blueprint $t) {
-                // Laravel здесь сам не проверяет наличие — но если индекса нет,
-                // команда отработает нормально.
                 $t->unique(
                     ['driver_group_id', 'client_tariff_id'],
                     'dg_ct_unique'
