@@ -19,7 +19,7 @@ use App\Http\Controllers\Admin\ReportController;
 
 Route::get('/', fn() => view('welcome'));
 
-
+// TEST: deployed from local machine
 // Профиль (Breeze стандарт)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
