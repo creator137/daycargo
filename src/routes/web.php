@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\Admin\TariffController;
 use App\Http\Controllers\Admin\CancelReasonController;
@@ -17,7 +18,15 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\ReportController;
 
-Route::get('/', fn() => view('welcome'));
+Route::get('/', function () {
+    if (Auth::check()) {
+        // если уже залогинен – сразу в админку
+        return redirect()->route('admin.dashboard');
+    }
+
+    // если гость – на страницу логина (Breeze)
+    return redirect()->route('login');
+});
 
 // TEST: deployed from local machine
 // Профиль (Breeze стандарт)
