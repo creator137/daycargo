@@ -14,11 +14,11 @@
             collapsed = !collapsed;
             localStorage.setItem('adminSidebarCollapsed', JSON.stringify(collapsed));
         ">
-        <div class="flex min-h-[calc(100vh-4rem)] bg-gray-100">
+        <div class="flex bg-gray-100 min-h-screen">
             {{-- Sidebar --}}
-            <aside id="adminSidebar" data-turbo-permanent
-                class="h-[calc(100vh-4rem)] bg-slate-900 text-slate-100 border-r border-slate-800
-                       transition-all duration-200 ease-in-out flex-shrink-0 overflow-y-auto"
+            <aside id="adminSidebar"
+                class="bg-slate-900 text-slate-100 border-r border-slate-800
+               transition-all duration-200 ease-in-out flex-shrink-0 overflow-y-auto"
                 :class="collapsed ? 'w-16' : 'w-64'">
 
                 @php
@@ -106,8 +106,8 @@
             </aside>
 
             {{-- Контент --}}
-            <main class="flex-1 p-6">
-                <div class="bg-white rounded-lg shadow p-6">
+            <main class="flex-1 p-6 flex flex-col">
+                <div class="bg-white rounded-lg shadow p-6 flex-1">
                     @yield('content')
                 </div>
             </main>
