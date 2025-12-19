@@ -5,7 +5,7 @@ export default defineConfig({
     server: {
         host: true, // слушать 0.0.0.0 в контейнере
         port: 5173,
-        hmr: { host: "localhost", port: 5173 }, // браузер с хоста
+        hmr: { host: "demo-daycargo-admin.bgdev.site", port: 5173 }, // браузер с хоста
         watch: { usePolling: true }, // стабильный вотч на volume
     },
     plugins: [
