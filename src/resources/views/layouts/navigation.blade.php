@@ -16,7 +16,7 @@
                 <a href="{{ route('admin.dashboard') }}" class="shrink-0 flex items-center">
                     @props(['class' => 'h-7 w-auto'])
 
-                    <img src="{{ Vite::asset('resources/images/logo_daycargo_hl.svg') }}" alt="Daycargo"
+                    <img src="{{ asset('images/logo_daycargo_hl.svg') }}" alt="Daycargo"
                         {{ $attributes->merge(['class' => $class]) }} />
                 </a>
             </div>
