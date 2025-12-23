@@ -16,6 +16,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $perms = [
 
             'acl.manage',
+            'admin.access',
+            'profile.me',
+
 
             // Тарифы расчётные
             'tariffs.view',
@@ -152,6 +155,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'promocodes' => 'Промокоды',
             'referrals'  => 'Рефералы',
             'orders' => 'Заказы',
+            'admin'   => 'Доступ в админку',
+            'profile' => 'Профиль',
         ];
 
         // Словарь для действий
@@ -259,6 +264,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'orders.map'
             ],
 
+            'physical' => ['admin.access', 'profile.me'],
+            'legal'    => ['admin.access', 'profile.me'],
+
+
 
         ];
 
@@ -271,6 +280,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'driver'     => ['display_name' => 'Водитель',      'description' => 'Роль для мобильного приложения'],
             'executor'   => ['display_name' => 'Исполнитель',   'description' => 'Исполнитель услуг'],
             'test'       => ['display_name' => 'Тестовая',      'description' => 'Для испытаний'],
+            'physical' => ['display_name' => 'Клиент (физ. лицо)', 'description' => 'Клиент сайта (физическое лицо)'],
+            'legal'    => ['display_name' => 'Клиент (юр. лицо)',  'description' => 'Клиент сайта (юридическое лицо)'],
+
         ];
 
         // Создание ролей с метками
