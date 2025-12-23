@@ -30,6 +30,7 @@ class Organization extends Model
         'email',
         'site',
         'contact_person',
+        'contact_position',
         'contact_phone',
         'contact_email',
         'contract_number',

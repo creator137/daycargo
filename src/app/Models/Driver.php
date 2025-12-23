@@ -38,6 +38,13 @@ class Driver extends Model
 
         'updated_by',
         'balance',
+
+        'first_name',
+        'last_name',
+        'second_name',
+        'citizenship',
+        'employment_type',
+        'city_id',
     ];
 
     protected $casts = [
@@ -83,5 +90,10 @@ class Driver extends Model
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
         $disk = Storage::disk('public');
         return $disk->url($this->avatar_path);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(\App\Models\DriverFile::class);
     }
 }

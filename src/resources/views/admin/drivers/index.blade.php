@@ -1,3 +1,5 @@
+{{-- resources/views/admin/drivers/index.blade.php --}}
+
 @extends('layouts.admin')
 
 @section('content')
@@ -62,8 +64,8 @@
             <x-ui.table tone="bold" bordered borderThick hover compact :headers="[
                 ['label' => 'Дата рег.'],
                 'Водитель',
-                'Позывной',
-                'Профессия',
+                ['label' => 'Позывной', 'width' => '120px'],
+                ['label' => 'Документы', 'width' => '140px'],
                 ['label' => 'Класс'],
                 ['label' => 'Баланс', 'align' => 'right'],
                 'Партнёр',
@@ -72,8 +74,20 @@
                 ['label' => 'Действия', 'align' => 'right', 'width' => '280px'],
             ]">
                 @foreach ($items as $d)
+                    @php
+                        // аккуратно: если relation files есть — покажем счётчик, иначе не падаем
+                        $filesCount = 0;
+                        if (method_exists($d, 'files')) {
+                            try {
+                                $filesCount = $d->relationLoaded('files') ? $d->files->count() : $d->files()->count();
+                            } catch (\Throwable $e) {
+                                $filesCount = 0;
+                            }
+                        }
+                    @endphp
                     <tr>
                         <td>{{ optional($d->created_at)->format('d.m.Y') }}</td>
+
                         <td>
                             <div class="flex items-center gap-3">
                                 @if ($d->avatar_url)
@@ -85,31 +99,65 @@
                                         {{ mb_substr($d->full_name ?? '—', 0, 1) }}
                                     </div>
                                 @endif
+
                                 <div>
-                                    <div class="font-medium">{{ $d->full_name ?: '—' }}</div>
+                                    <div class="font-medium">
+                                        {{ $d->full_name ?: trim(($d->last_name ?? '') . ' ' . ($d->first_name ?? '') . ' ' . ($d->second_name ?? '')) ?: '—' }}
+                                    </div>
+
                                     <div class="text-xs text-slate-500">
                                         @if ($d->phone)
                                             <a class="hover:underline"
                                                 href="tel:{{ $d->phone }}">{{ $d->phone }}</a>
                                         @endif
+
                                         @if ($d->email)
                                             · <a class="hover:underline"
                                                 href="mailto:{{ $d->email }}">{{ $d->email }}</a>
                                         @endif
+
                                         @if ($d->main_city)
                                             · {{ $d->main_city }}
+                                        @endif
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 mt-0.5">
+                                        @if (!empty($d->citizenship))
+                                            {{ $d->citizenship }}
+                                        @endif
+                                        @if (!empty($d->employment_type))
+                                            @if (!empty($d->citizenship))
+                                                ·
+                                            @endif {{ $d->employment_type }}
                                         @endif
                                     </div>
                                 </div>
                             </div>
                         </td>
+
                         <td>{{ $d->callsign ?: '—' }}</td>
-                        <td>{{ $d->profession ?: '—' }}</td>
+
+                        <td>
+                            @if ($filesCount > 0)
+                                <span
+                                    class="px-2 py-1 text-xs rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                    {{ $filesCount }} файл(ов)
+                                </span>
+                            @else
+                                <span class="text-slate-400 text-xs">нет</span>
+                            @endif
+                        </td>
+
                         <td>{{ optional($d->vehicleType)->name ?: '—' }}</td>
-                        <td class="text-right">{{ number_format($d->balance, 2, ',', ' ') }}</td>
+
+                        <td class="text-right">{{ number_format((float) ($d->balance ?? 0), 2, ',', ' ') }}</td>
+
                         <td>{{ $d->partner_name ?: '—' }}</td>
+
                         <td>{{ optional($d->updated_at)->format('d.m.Y H:i') }}</td>
+
                         <td>{{ optional($d->updatedBy)->name ?: '—' }}</td>
+
                         <td class="text-right">
                             <div class="flex justify-end gap-2">
                                 @if ($d->phone)
@@ -124,6 +172,7 @@
                                 @can('update', $d)
                                     <x-ui.button :href="route('admin.drivers.edit', $d)" variant="primary" size="sm">Править</x-ui.button>
                                 @endcan
+
                                 @can('toggle', $d)
                                     <form action="{{ route('admin.drivers.toggle', $d) }}" method="post">
                                         @csrf @method('PATCH')
@@ -132,6 +181,7 @@
                                         </x-ui.button>
                                     </form>
                                 @endcan
+
                                 @can('delete', $d)
                                     <form action="{{ route('admin.drivers.destroy', $d) }}" method="post"
                                         onsubmit="return confirm('Удалить водителя?');">

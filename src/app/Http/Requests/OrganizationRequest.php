@@ -39,6 +39,7 @@ class OrganizationRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'site'  => ['nullable', 'string', 'max:255'],
 
+            'contact_position' => ['nullable', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'contact_phone'  => ['nullable', 'string', 'max:50'],
             'contact_email'  => ['nullable', 'email', 'max:255'],

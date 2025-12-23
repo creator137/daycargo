@@ -26,12 +26,17 @@ class Vehicle extends Model
         'options',
         'status',
         'comment',
+        'not_in_list',
+        'external_car_class_id',
+        'dimensions',
     ];
 
     protected $casts = [
         'is_rent' => 'bool',
         'options' => 'array',
         'year'    => 'integer',
+        'not_in_list' => 'bool',
+        'dimensions'  => 'array',
     ];
 
     public function driver()
