@@ -3,3 +3,6 @@
 src/.npm/
 src/.lesshst
 src/storage/.config/
+
+# Windows ADS junk
+*:Zone.Identifier
