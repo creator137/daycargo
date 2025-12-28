@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class DriverVacancyController extends Controller
 {
@@ -22,14 +23,17 @@ class DriverVacancyController extends Controller
             'lastName' => ['required', 'string', 'max:100'],
             'secondName' => ['nullable', 'string', 'max:100'],
             'citizenship' => ['nullable', 'string', 'max:100'],
-            'cityId' => ['nullable'],
+
+            // ✅ cityId = ID города
+            'cityId' => ['nullable', 'integer', Rule::exists('cities', 'id')],
+
             'employment_type' => ['nullable', 'string', 'max:50'],
 
             // car
             'carBrand' => ['nullable', 'string', 'max:100'],
             'carModel' => ['nullable', 'string', 'max:100'],
             'carYear' => ['nullable', 'integer', 'min:1950', 'max:' . (date('Y') + 1)],
-            'car' => ['nullable', 'boolean'], // not in list
+            'car' => ['nullable', 'boolean'],
             'carClass' => ['nullable', 'integer'],
             'carColor' => ['nullable', 'string', 'max:50'],
             'carGosNumber' => ['nullable', 'string', 'max:32'],
@@ -59,18 +63,13 @@ class DriverVacancyController extends Controller
 
         return DB::transaction(function () use ($request, $data) {
 
-            // cityId -> main_city name, + city_id если число
-            $cityId = $data['cityId'] ?? null;
-            $mainCity = null;
-            $cityIdInt = null;
+            // cityId -> city_id + main_city (name)
+            $cityIdInt = isset($data['cityId']) ? (int)$data['cityId'] : null;
+            $cityName = null;
 
-            if ($cityId !== null && $cityId !== '') {
-                if (is_numeric($cityId)) {
-                    $cityIdInt = (int) $cityId;
-                    $mainCity = City::find($cityIdInt)?->name;
-                } else {
-                    $mainCity = (string) $cityId;
-                }
+            if (!empty($cityIdInt)) {
+                $city = City::query()->select(['id', 'name'])->find($cityIdInt);
+                $cityName = $city?->name;
             }
 
             $firstName  = $data['name'];
@@ -91,13 +90,14 @@ class DriverVacancyController extends Controller
 
                 'citizenship' => $data['citizenship'] ?? null,
                 'employment_type' => $data['employment_type'] ?? null,
+
+                // ✅ привязка к справочнику
                 'city_id' => $cityIdInt,
-                'main_city' => $mainCity,
+                'main_city' => $cityName,
 
                 'supports_terminal' => false,
                 'sort' => 100,
 
-                // чтобы водитель мог логиниться потом — ставим случайный пароль
                 'app_password' => Hash::make(bin2hex(random_bytes(8))),
             ]);
 
@@ -124,18 +124,24 @@ class DriverVacancyController extends Controller
                 $options['loading_types'] = $data['typeLoading'];
             }
 
+            // ✅ FIX: если в БД brand NOT NULL — подставляем дефолт, чтобы API не падало
+            $brand = $data['carBrand'] ?? null;
+            if ($brand === null || $brand === '') {
+                $brand = '—'; // дефолт (можно 'Unknown')
+            }
+
             $vehicle = Vehicle::create([
                 'driver_id' => $driver->id,
                 'status' => 'pending',
 
-                'city' => $mainCity,
+                'city' => $cityName,
 
                 'owner_type' => 'private',
                 'is_rent' => false,
 
-                'vehicle_type_id' => null, // пока не маппим carClass -> vehicle_types
+                'vehicle_type_id' => null,
 
-                'brand' => $data['carBrand'] ?? null,
+                'brand' => $brand,
                 'model' => $data['carModel'] ?? null,
                 'year' => $data['carYear'] ?? null,
                 'color' => $data['carColor'] ?? null,

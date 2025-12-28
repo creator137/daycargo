@@ -8,6 +8,61 @@
         $method = $isEdit ? 'PUT' : 'POST';
     @endphp
 
+    {{-- ВАЖНО: кошельки в отдельные формы (НЕ внутри основной формы клиента) --}}
+    @if ($isEdit)
+        {{-- Money --}}
+        <form id="wallet-money-form" method="post" action="{{ route('admin.clients.wallet', $client) }}" class="hidden">
+            @csrf
+            <input type="hidden" name="wallet" value="money">
+            <input type="hidden" name="operation" value="">
+            <input type="hidden" name="amount" value="">
+            <input type="hidden" name="comment" value="">
+        </form>
+
+        {{-- Bonus --}}
+        <form id="wallet-bonus-form" method="post" action="{{ route('admin.clients.wallet', $client) }}" class="hidden">
+            @csrf
+            <input type="hidden" name="wallet" value="bonus">
+            <input type="hidden" name="operation" value="">
+            <input type="hidden" name="amount" value="">
+            <input type="hidden" name="comment" value="">
+        </form>
+
+        <script>
+            function submitWalletForm(type) {
+                const isMoney = type === 'money';
+
+                const opName = isMoney ? 'wallet_money_operation' : 'wallet_bonus_operation';
+                const amountName = isMoney ? 'wallet_money_amount' : 'wallet_bonus_amount';
+                const commentName = isMoney ? 'wallet_money_comment' : 'wallet_bonus_comment';
+
+                const formId = isMoney ? '#wallet-money-form' : '#wallet-bonus-form';
+
+                const op = (document.querySelector(`[name="${opName}"]`)?.value ?? '').trim();
+                const amountEl = document.querySelector(`[name="${amountName}"]`);
+                const amountRaw = (amountEl?.value ?? '').trim();
+                const comment = (document.querySelector(`[name="${commentName}"]`)?.value ?? '').trim();
+
+                // Валидация только при клике "Выполнить"
+                if (!amountRaw || isNaN(Number(amountRaw))) {
+                    alert(isMoney ? 'Введите сумму.' : 'Введите количество баллов.');
+                    if (amountEl) amountEl.focus();
+                    return false;
+                }
+
+                const form = document.querySelector(formId);
+                if (!form) return false;
+
+                form.querySelector('input[name="operation"]').value = op;
+                form.querySelector('input[name="amount"]').value = amountRaw;
+                form.querySelector('input[name="comment"]').value = comment;
+
+                form.submit();
+                return true;
+            }
+        </script>
+    @endif
+
     <x-crud.form :title="$title" :action="$action" :method="$method" :backUrl="route('admin.clients.index')" :hasFiles="true">
         <x-crud.fields>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -63,6 +118,8 @@
                 появятся по мере реализации соответствующих модулей.
             </x-ui.alert>
 
+            {{-- КНОПКИ основной формы клиента --}}
+            <x-form.actions :cancel="route('admin.clients.index')" :submitLabel="$isEdit ? 'Сохранить' : 'Создать'" />
         </x-crud.fields>
 
         @if ($isEdit)
@@ -73,26 +130,29 @@
                         <div class="flex items-center justify-between mb-3">
                             <div class="font-medium">Денежный баланс</div>
                             <div class="text-sm text-slate-600">
-                                Текущий: <span class="font-medium">{{ number_format((float) $client->balance, 2, ',', ' ') }}
-                                    ₽</span>
+                                Текущий:
+                                <span class="font-medium">{{ number_format((float) $client->balance, 2, ',', ' ') }} ₽</span>
                             </div>
                         </div>
 
-                        <form method="post" action="{{ route('admin.clients.wallet', $client) }}"
-                            class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            @csrf
-                            <input type="hidden" name="wallet" value="money">
-                            <x-form.select name="operation" label="Операция" :options="['topup' => 'Пополнение', 'debit' => 'Списание']" />
-                            <x-form.input name="amount" type="number" step="0.01" label="Сумма, ₽" required />
-                            <x-form.input name="comment" label="Комментарий" />
+                        {{-- НЕ form! --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <x-form.select name="wallet_money_operation" label="Операция" :options="['topup' => 'Пополнение', 'debit' => 'Списание']" />
+                            {{-- ВАЖНО: без required --}}
+                            <x-form.input name="wallet_money_amount" type="number" step="0.01" label="Сумма, ₽" />
+                            <x-form.input name="wallet_money_comment" label="Комментарий" />
+
                             <div class="md:col-span-3">
                                 @canany(['client_economy.topup', 'client_economy.debit'])
-                                    <x-ui.button type="submit" variant="primary" size="sm">Выполнить</x-ui.button>
+                                    <x-ui.button type="button" variant="primary" size="sm"
+                                        onclick="submitWalletForm('money')">
+                                        Выполнить
+                                    </x-ui.button>
                                 @else
                                     <x-ui.alert tone="muted">Нет прав на операции с балансом.</x-ui.alert>
                                 @endcanany
                             </div>
-                        </form>
+                        </div>
 
                         <div class="mt-4">
                             <div class="text-sm font-medium mb-2">Последние операции</div>
@@ -124,27 +184,30 @@
                         <div class="flex items-center justify-between mb-3">
                             <div class="font-medium">Бонусный баланс</div>
                             <div class="text-sm text-slate-600">
-                                Текущий: <span
-                                    class="font-medium">{{ number_format((float) $client->bonus_balance, 2, ',', ' ') }}
+                                Текущий:
+                                <span class="font-medium">{{ number_format((float) $client->bonus_balance, 2, ',', ' ') }}
                                     баллов</span>
                             </div>
                         </div>
 
-                        <form method="post" action="{{ route('admin.clients.wallet', $client) }}"
-                            class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            @csrf
-                            <input type="hidden" name="wallet" value="bonus">
-                            <x-form.select name="operation" label="Операция" :options="['topup' => 'Начислить', 'debit' => 'Списать']" />
-                            <x-form.input name="amount" type="number" step="0.01" label="Баллы" required />
-                            <x-form.input name="comment" label="Комментарий" />
+                        {{-- НЕ form! --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <x-form.select name="wallet_bonus_operation" label="Операция" :options="['topup' => 'Начислить', 'debit' => 'Списать']" />
+                            {{-- ВАЖНО: без required --}}
+                            <x-form.input name="wallet_bonus_amount" type="number" step="0.01" label="Баллы" />
+                            <x-form.input name="wallet_bonus_comment" label="Комментарий" />
+
                             <div class="md:col-span-3">
                                 @canany(['client_economy.topup', 'client_economy.debit'])
-                                    <x-ui.button type="submit" variant="primary" size="sm">Выполнить</x-ui.button>
+                                    <x-ui.button type="button" variant="primary" size="sm"
+                                        onclick="submitWalletForm('bonus')">
+                                        Выполнить
+                                    </x-ui.button>
                                 @else
                                     <x-ui.alert tone="muted">Нет прав на операции с бонусами.</x-ui.alert>
                                 @endcanany
                             </div>
-                        </form>
+                        </div>
 
                         <div class="mt-4">
                             <div class="text-sm font-medium mb-2">История бонусов</div>
@@ -174,6 +237,5 @@
                 </div>
             @endcan
         @endif
-        <x-form.actions :cancel="route('admin.clients.index')" :submitLabel="$isEdit ? 'Сохранить' : 'Создать'" />
     </x-crud.form>
 @endsection

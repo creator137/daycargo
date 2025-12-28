@@ -9,7 +9,70 @@
         $action = $isEdit ? route('admin.drivers.update', $driver) : route('admin.drivers.store');
         $method = $isEdit ? 'PUT' : 'POST';
 
-        // Типы документов (совпадают с полями из формы/endpoint)
+        // ✅ FIX: делаем два массива:
+        // - для city_id: id => name
+        // - для main_city и cities: name => name (если они строковые)
+        $citiesOptionsById = [];
+        $citiesOptionsByName = [];
+
+        // если контроллер уже передал нужные переменные — используем
+        if (isset($citiesOptionsById) && is_array($citiesOptionsById) && count($citiesOptionsById)) {
+            // nothing
+        } else {
+            // fallback: пытаемся восстановить из $citiesOptions
+            // если $citiesOptions был id=>name — ок
+            // если $citiesOptions был name=>name — сделаем id=>name через запрос
+            if (isset($citiesOptions) && is_array($citiesOptions)) {
+                $keys = array_keys($citiesOptions);
+                $looksLikeIdMap = count($keys) && is_numeric($keys[0]);
+                if ($looksLikeIdMap) {
+                    $citiesOptionsById = $citiesOptions;
+                } else {
+                    // name=>name -> грузим id=>name
+                    try {
+                        $citiesOptionsById = \App\Models\City::query()
+                            ->where('active', true)
+                            ->orderBy('sort')
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    } catch (\Throwable $e) {
+                        $citiesOptionsById = [];
+                    }
+                }
+            } else {
+                try {
+                    $citiesOptionsById = \App\Models\City::query()
+                        ->where('active', true)
+                        ->orderBy('sort')
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->toArray();
+                } catch (\Throwable $e) {
+                    $citiesOptionsById = [];
+                }
+            }
+        }
+
+        // name=>name (для строковых полей)
+        // если $citiesOptions был id=>name — превратим в name=>name
+        if (isset($citiesOptions) && is_array($citiesOptions) && count($citiesOptions)) {
+            $keys = array_keys($citiesOptions);
+            $looksLikeIdMap = count($keys) && is_numeric($keys[0]);
+            if ($looksLikeIdMap) {
+                foreach ($citiesOptions as $id => $name) {
+                    $citiesOptionsByName[(string) $name] = (string) $name;
+                }
+            } else {
+                $citiesOptionsByName = $citiesOptions;
+            }
+        } else {
+            foreach ($citiesOptionsById as $id => $name) {
+                $citiesOptionsByName[(string) $name] = (string) $name;
+            }
+        }
+
+        // Типы документов
         $docTypes = [
             'osagoScan1' => 'ОСАГО (скан)',
             'passportScan1' => 'Паспорт (1-я страница)',
@@ -50,7 +113,6 @@
                 <x-form.select name="status" label="Статус" :options="['active' => 'Активен', 'blocked' => 'Заблокирован', 'pending' => 'Неактивирован']" :value="old('status', $driver->status ?? 'pending')" required />
             </div>
 
-            {{-- Анкета из заявки (но в админке редактируем вручную, если нужно) --}}
             <x-form.row cols="3">
                 <x-form.input name="last_name" label="Фамилия" :value="old('last_name', $driver->last_name)" />
                 <x-form.input name="first_name" label="Имя" :value="old('first_name', $driver->first_name)" />
@@ -60,11 +122,11 @@
             <x-form.row cols="3">
                 <x-form.input name="citizenship" label="Гражданство" :value="old('citizenship', $driver->citizenship)" />
                 <x-form.input name="employment_type" label="Тип занятости" :value="old('employment_type', $driver->employment_type)" />
-                <x-form.input name="city_id" label="Город (cityId из формы)" type="number" min="0"
-                    :value="old('city_id', $driver->city_id)" />
+
+                {{-- ✅ FIX: city_id должен быть селект по ID --}}
+                <x-form.select name="city_id" label="Город (cityId из формы)" :options="['' => '—'] + $citiesOptionsById" :value="old('city_id', (string) ($driver->city_id ?? ''))" />
             </x-form.row>
 
-            {{-- Связки / класс --}}
             <x-form.row cols="3">
                 <x-form.select name="vehicle_type_id" label="Класс авто" :options="$vehicleTypes" :value="old('vehicle_type_id', $driver->vehicle_type_id)" required />
                 <x-form.select name="driver_group_id" label="Группа исполнителей (опц.)" :options="['' => '—'] + $driverGroups->toArray()"
@@ -72,24 +134,22 @@
                 <x-form.toggle name="supports_terminal" label="Поддержка терминала" :checked="old('supports_terminal', (bool) $driver->supports_terminal)" />
             </x-form.row>
 
-            {{-- Контакты --}}
             <x-form.row cols="3">
                 <x-form.input name="phone" label="Мобильный телефон" required :value="old('phone', $driver->phone)" />
                 <x-form.input name="email" label="Email" type="email" :value="old('email', $driver->email)" />
                 <x-form.date name="birth_date" label="Дата рождения" :value="old('birth_date', $driver->birth_date)" />
             </x-form.row>
 
-            {{-- Города + позывной --}}
             <x-form.row cols="2">
-                <x-form.select name="main_city" label="Главный город" :options="['' => '—'] + $citiesOptions" :value="old('main_city', $driver->main_city)" required />
+                {{-- main_city у тебя строка -> name=>name --}}
+                <x-form.select name="main_city" label="Главный город" :options="['' => '—'] + $citiesOptionsByName" :value="old('main_city', $driver->main_city)" required />
                 <x-form.input name="callsign" label="Позывной" :value="old('callsign', $driver->callsign)" />
             </x-form.row>
 
-            {{-- Множественный выбор городов (чекбоксы) --}}
-            <x-form.multiselect-checkboxes name="cities" label="Города работы (множественно)" :options="$citiesOptions"
+            {{-- cities обычно строками -> name=>name --}}
+            <x-form.multiselect-checkboxes name="cities" label="Города работы (множественно)" :options="$citiesOptionsByName"
                 :values="old('cities', $driver->cities ?? [])" :columns="3" />
 
-            {{-- Платёжные реквизиты / партнёр --}}
             <x-form.row cols="3">
                 <x-form.input name="payout_card" label="Номер банковской карты" :value="old('payout_card', $driver->payout_card)" />
                 <x-form.input name="payout_first_name_en" label="Имя (латиницей)" :value="old('payout_first_name_en', $driver->payout_first_name_en)" />
@@ -103,7 +163,6 @@
                     :value="old('sort', $driver->sort ?? 100)" />
             </x-form.row>
 
-            {{-- Доступ в приложение (опционально) --}}
             <x-form.row cols="2">
                 <x-form.input name="password" type="password" label="Пароль для приложения" />
                 <x-form.input name="password_confirmation" type="password" label="Повтор пароля" />
@@ -111,7 +170,6 @@
 
             <x-form.input name="sms_fixed_code" label="Фиксированный SMS-код" :value="old('sms_fixed_code', $driver->sms_fixed_code)" />
 
-            {{-- Документы (driver_files) --}}
             <div class="mt-2">
                 <div class="text-sm font-medium text-slate-700 mb-2">Документы (сканы)</div>
 
