@@ -128,6 +128,11 @@ class BusAuthController extends Controller
                 $user->save();
             }
 
+            if (!empty($data['legal_contact_name'])) {
+                $client->full_name = $data['legal_contact_name'];
+            }
+
+
             $client->save();
 
             // org upsert (по inn если есть)
@@ -162,10 +167,6 @@ class BusAuthController extends Controller
 
             if (!empty($data['legal_company_address'])) {
                 $org->legal_address = $data['legal_company_address'];
-            }
-
-            if (!empty($data['legal_contact_name'])) {
-                $client->full_name = $data['legal_contact_name'];
             }
 
             if (array_key_exists('legal_contact_position', $data)) {
