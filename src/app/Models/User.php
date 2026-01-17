@@ -40,4 +40,20 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\Client::class);
     }
+
+    public function clientByUserId()
+    {
+        return $this->hasOne(\App\Models\Client::class, 'user_id');
+    }
+
+    public function clientByClientId()
+    {
+        return $this->belongsTo(\App\Models\Client::class, 'client_id');
+    }
+
+    // Удобный доступ: $user->client_profile (не ломает старые связи)
+    public function getClientProfileAttribute()
+    {
+        return $this->clientByUserId ?? $this->clientByClientId;
+    }
 }

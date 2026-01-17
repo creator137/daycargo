@@ -74,6 +74,7 @@ Route::prefix('admin/acl')
         Route::get('/users',              [UserRoleController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit',  [UserRoleController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}',       [UserRoleController::class, 'update'])->name('users.update');
+        Route::get('/users/{user}', [UserRoleController::class, 'show'])->name('users.show');
 
         // Матрица ролей и прав
         Route::get('/matrix',  [MatrixController::class, 'index'])->name('matrix.index');

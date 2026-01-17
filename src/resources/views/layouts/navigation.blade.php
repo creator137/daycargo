@@ -41,6 +41,9 @@
                             <x-dropdown-link :href="route('admin.acl.roles.index')">
                                 Роли и права
                             </x-dropdown-link>
+                            <x-dropdown-link :href="route('admin.acl.users.index')">
+                                Пользователи
+                            </x-dropdown-link>
                         @endcan
 
                         <x-dropdown-link :href="route('profile.edit')">Профиль</x-dropdown-link>
