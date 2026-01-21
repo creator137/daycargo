@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DriverRequest;
 use App\Models\Driver;
+use App\Models\DriverFile;
 use App\Models\DriverGroup;
 use App\Models\VehicleType;
-use App\Models\Tariff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -96,13 +96,19 @@ class DriverController extends Controller
         }
         unset($data['password'], $data['password_confirmation']);
 
+        // docs отдельно (в drivers нет такого поля)
+        $docs = $data['docs'] ?? null;
+        unset($data['docs']);
+
         if ($req->hasFile('avatar')) {
             $data['avatar_path'] = $req->file('avatar')->store('drivers', 'public');
         }
 
         $data['updated_by'] = Auth::id();
 
-        Driver::create($data);
+        $driver = Driver::create($data);
+
+        $this->saveDriverDocs($driver, $req, $docs);
 
         return redirect()->route('admin.drivers.index')->with('success', 'Водитель создан.');
     }
@@ -112,6 +118,9 @@ class DriverController extends Controller
         $vehicleTypes  = VehicleType::orderBy('capacity_kg')->pluck('name', 'id');
         $driverGroups  = DriverGroup::orderBy('name')->pluck('name', 'id');
         $citiesOptions = $this->citiesOptions();
+
+        // чтобы форма могла показать "Открыть" по docs
+        $driver->load('files');
 
         return view('admin.drivers.form', compact('driver', 'vehicleTypes', 'driverGroups', 'citiesOptions'));
     }
@@ -125,6 +134,9 @@ class DriverController extends Controller
         }
         unset($data['password'], $data['password_confirmation']);
 
+        $docs = $data['docs'] ?? null;
+        unset($data['docs']);
+
         if ($req->hasFile('avatar')) {
             $newPath = $req->file('avatar')->store('drivers', 'public');
             if ($driver->avatar_path) {
@@ -137,6 +149,8 @@ class DriverController extends Controller
 
         $driver->update($data);
 
+        $this->saveDriverDocs($driver, $req, $docs);
+
         return redirect()->route('admin.drivers.index')->with('success', 'Сохранено.');
     }
 
@@ -145,6 +159,15 @@ class DriverController extends Controller
         if ($driver->avatar_path) {
             Storage::disk('public')->delete($driver->avatar_path);
         }
+
+        // удалить физические файлы документов
+        $driver->load('files');
+        foreach ($driver->files as $f) {
+            if (!empty($f->path)) {
+                Storage::disk('public')->delete($f->path);
+            }
+        }
+
         $driver->delete();
         return back()->with('success', 'Удалено.');
     }
@@ -159,5 +182,43 @@ class DriverController extends Controller
         $driver->save();
 
         return back()->with('success', 'Статус изменён.');
+    }
+
+    private function saveDriverDocs(Driver $driver, Request $req, ?array $docs): void
+    {
+        if (!$docs || !is_array($docs)) {
+            return;
+        }
+
+        foreach ($docs as $type => $file) {
+            if (!$req->hasFile("docs.$type")) {
+                continue;
+            }
+
+            $uploaded = $req->file("docs.$type");
+            if (!$uploaded || !$uploaded->isValid()) {
+                continue;
+            }
+
+            // удалить старое по типу (и файл, и запись)
+            $old = $driver->files()->where('type', $type)->get();
+            foreach ($old as $o) {
+                if (!empty($o->path)) {
+                    Storage::disk('public')->delete($o->path);
+                }
+                $o->delete();
+            }
+
+            $path = $uploaded->store("drivers/docs/{$driver->id}", 'public');
+
+            DriverFile::create([
+                'driver_id'     => $driver->id,
+                'type'          => (string) $type,
+                'path'          => $path,
+                'original_name' => $uploaded->getClientOriginalName(),
+                'size'          => $uploaded->getSize(),
+                'mime'          => $uploaded->getMimeType(),
+            ]);
+        }
     }
 }

@@ -81,6 +81,9 @@
             'driverLicenseScan2' => 'Вод. удостоверение (оборот)',
             'ptsScan1' => 'ПТС (1-я)',
             'ptsScan2' => 'ПТС (2-я)',
+            'snilsScan1' => 'СНИЛС (скан)',
+            'innScan1' => 'ИНН (скан)',
+            'ogrnipScan1' => 'ОГРНИП (скан)',
         ];
 
         $filesByType = [];
@@ -169,6 +172,59 @@
             </x-form.row>
 
             <x-form.input name="sms_fixed_code" label="Фиксированный SMS-код" :value="old('sms_fixed_code', $driver->sms_fixed_code)" />
+
+            {{-- Реквизиты документов (паспорт / ИНН / права) --}}
+            <div class="mt-6">
+                <div class="text-sm font-medium text-slate-700 mb-2">Реквизиты документов</div>
+
+                {{-- Паспорт --}}
+                <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                    <div class="text-sm font-medium text-slate-800 mb-3">Паспорт</div>
+
+                    <x-form.row cols="2">
+                        <x-form.input name="passport_series" label="Серия" :value="old('passport_series', $driver->passport_series)" />
+                        <x-form.input name="passport_number" label="Номер" :value="old('passport_number', $driver->passport_number)" />
+                    </x-form.row>
+
+                    <x-form.row cols="2">
+                        <x-form.input name="passport_issued_by" label="Кем выдан" :value="old('passport_issued_by', $driver->passport_issued_by)" />
+                        <x-form.date name="passport_issued_at" label="Дата выдачи" :value="old('passport_issued_at', $driver->passport_issued_at)" />
+                    </x-form.row>
+
+                    <x-form.row cols="2">
+                        <x-form.input name="passport_reg_address" label="Адрес регистрации" :value="old('passport_reg_address', $driver->passport_reg_address)" />
+                        <x-form.input name="passport_fact_address" label="Фактический адрес" :value="old('passport_fact_address', $driver->passport_fact_address)" />
+                    </x-form.row>
+                </div>
+
+                {{-- ИНН / ОГРНИП --}}
+                <div class="rounded-lg border border-slate-200 p-4 bg-white mt-4">
+                    <div class="text-sm font-medium text-slate-800 mb-3">ИНН / ОГРНИП / СНИЛС</div>
+
+                    <x-form.row cols="2">
+                        <x-form.input name="inn" label="ИНН" :value="old('inn', $driver->inn)" />
+                        <x-form.input name="ogrnip" label="ОГРНИП" :value="old('ogrnip', $driver->ogrnip)" />
+                        <x-form.input name="snils" label="СНИЛС" :value="old('snils', $driver->snils)" />
+                    </x-form.row>
+                </div>
+
+                {{-- Водительское удостоверение --}}
+                <div class="rounded-lg border border-slate-200 p-4 bg-white mt-4">
+                    <div class="text-sm font-medium text-slate-800 mb-3">Водительское удостоверение</div>
+
+                    <x-form.row cols="2">
+                        <x-form.input name="driver_license_series" label="Серия" :value="old('driver_license_series', $driver->driver_license_series)" />
+                        <x-form.input name="driver_license_number" label="Номер" :value="old('driver_license_number', $driver->driver_license_number)" />
+                    </x-form.row>
+
+                    <x-form.row cols="3">
+                        <x-form.input name="driver_license_category" label="Категория" :value="old('driver_license_category', $driver->driver_license_category)" />
+                        <x-form.date name="driver_license_experience_from" label="Стаж с" :value="old('driver_license_experience_from', $driver->driver_license_experience_from)" />
+                        <x-form.date name="driver_license_expires_at" label="Действует до" :value="old('driver_license_expires_at', $driver->driver_license_expires_at)" />
+                    </x-form.row>
+                </div>
+            </div>
+
 
             <div class="mt-2">
                 <div class="text-sm font-medium text-slate-700 mb-2">Документы (сканы)</div>

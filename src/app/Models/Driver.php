@@ -22,14 +22,23 @@ class Driver extends Model
 
         'main_city',
         'cities',
+        'partner_id',
         'partner_name',
 
         'payout_card',
         'payout_first_name_en',
         'payout_last_name_en',
-        'yandex_wallet',
 
+        // есть в БД (раньше не было в fillable)
+        'card_number',
+        'card_holder_latin',
+        'yandex_wallet',
         'sms_fixed_code',
+        'sms_code',
+        'cooperation_type',
+        'options',
+        'color',
+
         'sort',
         'comment',
 
@@ -45,6 +54,22 @@ class Driver extends Model
         'citizenship',
         'employment_type',
         'city_id',
+
+        // НОВОЕ: документы (реквизиты)
+        'passport_series',
+        'passport_number',
+        'passport_issued_by',
+        'passport_issued_at',
+        'passport_reg_address',
+        'passport_fact_address',
+        'inn',
+        'ogrnip',
+        'snils',
+        'driver_license_series',
+        'driver_license_number',
+        'driver_license_category',
+        'driver_license_experience_from',
+        'driver_license_expires_at',
     ];
 
     protected $casts = [
@@ -52,9 +77,14 @@ class Driver extends Model
         'birth_date'        => 'date',
         'cities'            => 'array',
         'balance'           => 'decimal:2',
+        'options'           => 'array',
+
+        // НОВОЕ: даты документов
+        'passport_issued_at'             => 'date',
+        'driver_license_experience_from' => 'date',
+        'driver_license_expires_at'      => 'date',
     ];
 
-    // Отношения
     public function vehicleType()
     {
         return $this->belongsTo(VehicleType::class);
@@ -70,15 +100,10 @@ class Driver extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    // Удобный аксессор — пригодится во вьюхах/таблицах
     public function getDisplayNameAttribute(): string
     {
-        if (!empty($this->full_name)) {
-            return $this->full_name;
-        }
-        if (!empty($this->callsign)) {
-            return $this->callsign;
-        }
+        if (!empty($this->full_name)) return $this->full_name;
+        if (!empty($this->callsign)) return $this->callsign;
         return (string) $this->phone;
     }
 
