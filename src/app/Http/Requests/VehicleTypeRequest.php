@@ -20,7 +20,7 @@ class VehicleTypeRequest extends FormRequest
             'code'         => [
                 'required',
                 'string',
-                'max:8',
+                'max:100',
                 Rule::unique('vehicle_types', 'code')->ignore($id),
             ],
             'name'         => ['required', 'string', 'max:255'],
