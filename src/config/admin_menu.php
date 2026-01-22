@@ -69,6 +69,17 @@ return [
                 'route' => 'admin.dicts.tariff_groups',
                 'can'   => 'tariff_groups.view',
             ],
+            [
+                'label' => 'Типы кузова',
+                'route' => 'admin.dicts.vehicle_body_types',
+                'can'   => 'role:owner', // если твой рендерер умеет так — см. ниже
+            ],
+            [
+                'label' => 'Виды погрузки',
+                'route' => 'admin.dicts.vehicle_loading_types',
+                'can'   => 'role:owner',
+            ],
+
         ],
     ],
 

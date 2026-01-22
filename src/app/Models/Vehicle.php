@@ -29,6 +29,8 @@ class Vehicle extends Model
         'not_in_list',
         'external_car_class_id',
         'dimensions',
+        'body_type_id',
+        'loading_types',
     ];
 
     protected $casts = [
@@ -37,11 +39,17 @@ class Vehicle extends Model
         'year'    => 'integer',
         'not_in_list' => 'bool',
         'dimensions'  => 'array',
+        'loading_types' => 'array',
     ];
 
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function bodyType()
+    {
+        return $this->belongsTo(\App\Models\VehicleBodyType::class, 'body_type_id');
     }
 
     public function vehicleType()

@@ -85,6 +85,41 @@ Route::prefix('admin/acl')
 Route::middleware(['auth', 'verified', 'role:owner|admin|accountant|viewer'])
     ->prefix('admin')->name('admin.')
     ->group(function () {
+
+        Route::middleware(['role:owner'])->group(function () {
+
+            Route::resource('dicts/vehicle-body-types', \App\Http\Controllers\Admin\VehicleBodyTypeController::class)
+                ->except(['show'])
+                ->parameters(['vehicle-body-types' => 'vehicleBodyType'])
+                ->names([
+                    'index'   => 'dicts.vehicle_body_types',
+                    'create'  => 'vehicle_body_types.create',
+                    'store'   => 'vehicle_body_types.store',
+                    'edit'    => 'vehicle_body_types.edit',
+                    'update'  => 'vehicle_body_types.update',
+                    'destroy' => 'vehicle_body_types.destroy',
+                ]);
+
+            Route::patch('dicts/vehicle-body-types/{vehicleBodyType}/toggle', [\App\Http\Controllers\Admin\VehicleBodyTypeController::class, 'toggle'])
+                ->name('vehicle_body_types.toggle');
+
+
+            Route::resource('dicts/vehicle-loading-types', \App\Http\Controllers\Admin\VehicleLoadingTypeController::class)
+                ->except(['show'])
+                ->parameters(['vehicle-loading-types' => 'vehicleLoadingType'])
+                ->names([
+                    'index'   => 'dicts.vehicle_loading_types',
+                    'create'  => 'vehicle_loading_types.create',
+                    'store'   => 'vehicle_loading_types.store',
+                    'edit'    => 'vehicle_loading_types.edit',
+                    'update'  => 'vehicle_loading_types.update',
+                    'destroy' => 'vehicle_loading_types.destroy',
+                ]);
+
+            Route::patch('dicts/vehicle-loading-types/{vehicleLoadingType}/toggle', [\App\Http\Controllers\Admin\VehicleLoadingTypeController::class, 'toggle'])
+                ->name('vehicle_loading_types.toggle');
+        });
+
         Route::view('/', 'admin.dashboard')->name('dashboard');
 
         // Заказы

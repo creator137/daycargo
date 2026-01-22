@@ -109,6 +109,12 @@ class VehicleController extends Controller
             'cities'       => $this->cityOptions(),
             'vehicleTypes' => VehicleType::orderBy('capacity_kg')->pluck('name', 'id'),
             'drivers'      => $this->driverOptions(),
+            'bodyTypes' => \App\Models\VehicleBodyType::where('active', true)
+                ->orderBy('sort')->orderBy('name')->pluck('name', 'id'),
+
+            'loadingTypes' => \App\Models\VehicleLoadingType::where('active', true)
+                ->orderBy('sort')->orderBy('name')->pluck('name', 'id'),
+
         ]);
     }
 
@@ -133,6 +139,12 @@ class VehicleController extends Controller
             'cities'       => $this->cityOptions(),
             'vehicleTypes' => VehicleType::orderBy('capacity_kg')->pluck('name', 'id'),
             'drivers'      => $this->driverOptions(),
+            'bodyTypes' => \App\Models\VehicleBodyType::where('active', true)
+                ->orderBy('sort')->orderBy('name')->pluck('name', 'id'),
+
+            'loadingTypes' => \App\Models\VehicleLoadingType::where('active', true)
+                ->orderBy('sort')->orderBy('name')->pluck('name', 'id'),
+
         ]);
     }
 

@@ -38,6 +38,12 @@ class VehicleRequest extends FormRequest
             'options'         => ['nullable'],
             'options_json'    => ['nullable', 'string'],
 
+            'body_type_id'   => ['nullable', 'exists:vehicle_body_types,id'],
+
+            'loading_types'  => ['nullable', 'array'],
+            'loading_types.*' => ['integer', 'exists:vehicle_loading_types,id'],
+
+
             'status'          => ['required', 'in:active,blocked,pending'],
             'comment'         => ['nullable', 'string', 'max:2000'],
         ];

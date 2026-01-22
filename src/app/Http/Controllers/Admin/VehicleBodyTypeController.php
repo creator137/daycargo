@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\VehicleBodyType;
+use Illuminate\Http\Request;
+
+class VehicleBodyTypeController extends Controller
+{
+    public function index()
+    {
+        $items = VehicleBodyType::query()->orderBy('sort')->orderBy('name')->paginate(30);
+        return view('admin.dicts.vehicle_body_types.index', compact('items'));
+    }
+
+    public function create()
+    {
+        $item = new VehicleBodyType(['active' => true, 'sort' => 100]);
+        return view('admin.dicts.vehicle_body_types.form', compact('item'));
+    }
+
+    public function store(Request $r)
+    {
+        $data = $r->validate([
+            'name'   => ['required', 'string', 'max:150'],
+            'sort'   => ['nullable', 'integer', 'min:0'],
+            'active' => ['sometimes', 'boolean'],
+        ]);
+
+        $data['sort'] = (int)($data['sort'] ?? 100);
+        $data['active'] = (bool)($data['active'] ?? false);
+
+        VehicleBodyType::create($data);
+
+        return redirect()->route('admin.dicts.vehicle_body_types')->with('success', 'Создано.');
+    }
+
+    public function edit(VehicleBodyType $vehicleBodyType)
+    {
+        $item = $vehicleBodyType;
+        return view('admin.dicts.vehicle_body_types.form', compact('item'));
+    }
+
+    public function update(Request $r, VehicleBodyType $vehicleBodyType)
+    {
+        $data = $r->validate([
+            'name'   => ['required', 'string', 'max:150'],
+            'sort'   => ['nullable', 'integer', 'min:0'],
+            'active' => ['sometimes', 'boolean'],
+        ]);
+
+        $data['sort'] = (int)($data['sort'] ?? 100);
+        $data['active'] = (bool)($data['active'] ?? false);
+
+        $vehicleBodyType->update($data);
+
+        return back()->with('success', 'Сохранено.');
+    }
+
+    public function destroy(VehicleBodyType $vehicleBodyType)
+    {
+        $vehicleBodyType->delete();
+        return back()->with('success', 'Удалено.');
+    }
+
+    public function toggle(VehicleBodyType $vehicleBodyType)
+    {
+        $vehicleBodyType->active = !$vehicleBodyType->active;
+        $vehicleBodyType->save();
+
+        return back()->with('success', 'Статус изменён.');
+    }
+}

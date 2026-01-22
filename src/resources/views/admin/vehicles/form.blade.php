@@ -47,6 +47,14 @@
                 <x-form.toggle name="is_rent" label="Арендный" :checked="old('is_rent', (bool) $vehicle->is_rent)" />
             </x-form.row>
 
+            <x-form.row cols="2">
+                <x-form.select name="body_type_id" label="Тип кузова" :options="['' => '—'] + $bodyTypes->toArray()" :value="old('body_type_id', (string) ($vehicle->body_type_id ?? ''))" />
+
+                <x-form.multiselect-checkboxes name="loading_types" label="Виды погрузки" :options="$loadingTypes->toArray()"
+                    :values="old('loading_types', $vehicle->loading_types ?? [])" :columns="2" />
+            </x-form.row>
+
+
             {{-- Опции авто: можно чекбоксами, а можно JSONом — оставим оба варианта --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <x-form.toggle name="options[wagon]" label="Кузов универсал" :checked="old('options.wagon', data_get($vehicle->options, 'wagon'))" />
