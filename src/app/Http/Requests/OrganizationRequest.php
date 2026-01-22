@@ -53,6 +53,8 @@ class OrganizationRequest extends FormRequest
             'active'       => ['nullable', 'boolean'],
             'balance'      => ['nullable', 'numeric', 'min:-99999999', 'max:99999999'],
             'comment'      => ['nullable', 'string', 'max:5000'],
+            'edo_code' => ['nullable', 'string', 'max:100'],
+
         ];
     }
 

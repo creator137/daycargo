@@ -45,6 +45,7 @@
             <x-ui.table tone="bold" bordered hover compact :headers="[
                 'Название',
                 'Город',
+                'Код ЭДО',
                 'Договор',
                 ['label' => 'Баланс', 'align' => 'right', 'width' => '120px'],
                 ['label' => 'Статус', 'align' => 'center', 'width' => '120px'],
@@ -66,6 +67,7 @@
                             </div>
                         </td>
                         <td>{{ $org->city ?? '—' }}</td>
+                        <td>{{ $org->edo_code ?? '—' }}</td>
                         <td class="text-sm">
                             @if ($org->contract_number)
                                 № {{ $org->contract_number }}

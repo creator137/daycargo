@@ -21,6 +21,7 @@
             <x-form.row cols="2">
                 <x-form.input name="inn" label="ИНН" :value="old('inn', $org->inn)" />
                 <x-form.input name="kpp" label="КПП" :value="old('kpp', $org->kpp)" />
+                <x-form.input name="edo_code" label="Код ЭДО" :value="old('edo_code', $org->edo_code)" />
             </x-form.row>
 
             <x-form.row cols="2">

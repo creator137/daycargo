@@ -41,6 +41,7 @@ class Organization extends Model
         'active',
         'balance',
         'comment',
+        'edo_code',
     ];
 
     protected $casts = [
