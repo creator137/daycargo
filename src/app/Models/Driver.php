@@ -55,6 +55,8 @@ class Driver extends Model
         'employment_type',
         'city_id',
 
+        'is_loader',
+
         // НОВОЕ: документы (реквизиты)
         'passport_series',
         'passport_number',
@@ -78,6 +80,7 @@ class Driver extends Model
         'cities'            => 'array',
         'balance'           => 'decimal:2',
         'options'           => 'array',
+        'is_loader' => 'boolean',
 
         // НОВОЕ: даты документов
         'passport_issued_at'             => 'date',

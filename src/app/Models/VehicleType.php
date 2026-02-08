@@ -15,6 +15,7 @@ class VehicleType extends Model
         'capacity_kg',
         'active',
         'sort',
+        'body_height_from_ground_cm',
     ];
 
     protected $casts = [
@@ -24,5 +25,6 @@ class VehicleType extends Model
         'capacity_kg' => 'integer',
         'active'      => 'boolean',
         'sort'        => 'integer',
+        'body_height_from_ground_cm' => 'integer',
     ];
 }

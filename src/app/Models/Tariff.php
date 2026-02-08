@@ -13,12 +13,25 @@ class Tariff extends Model
         'integration' => 'Интеграция',
     ];
 
+    public const TARIFF_TYPES = [
+        'per_minute' => 'Поминутный',
+        'fixed'      => 'Фиксированный',
+    ];
+
     protected $fillable = [
         'vehicle_type_id',
         'scope_type',
         'scope_id',
         'city',
+
+        'tariff_type',
         'base_price',
+        'base_hours',
+        'extra_hour_price',
+        'loader_hour_price',
+        'top_loading_price',
+        'side_loading_price',
+
         'per_km',
         'per_min',
         'min_price',
@@ -28,7 +41,13 @@ class Tariff extends Model
     ];
 
     protected $casts = [
-        'base_price'    => 'decimal:2',
+        'base_price'         => 'decimal:2',
+        'base_hours'         => 'integer',
+        'extra_hour_price'   => 'decimal:2',
+        'loader_hour_price'  => 'decimal:2',
+        'top_loading_price'  => 'decimal:2',
+        'side_loading_price' => 'decimal:2',
+
         'per_km'        => 'decimal:2',
         'per_min'       => 'decimal:2',
         'min_price'     => 'decimal:2',
