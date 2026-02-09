@@ -26,7 +26,7 @@ class DriverRequest extends FormRequest
             'vehicle_type_id'   => ['required', 'exists:vehicle_types,id'],
             'driver_group_id'   => ['nullable', 'exists:driver_groups,id'],
             'supports_terminal' => ['sometimes', 'boolean'],
-
+            'is_loader' => ['boolean'],
             'phone'             => ['required', 'string', 'max:50'],
             'email'             => ['nullable', 'email', 'max:255', Rule::unique('drivers', 'email')->ignore($id)],
             'birth_date'        => ['nullable', 'date'],
@@ -94,6 +94,7 @@ class DriverRequest extends FormRequest
         $this->merge([
             'supports_terminal' => $this->boolean('supports_terminal'),
             // если сорт не задан — 100
+            'is_loader'         => $this->boolean('is_loader'),
             'sort' => $this->filled('sort') ? (int)$this->input('sort') : 100,
         ]);
     }

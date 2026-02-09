@@ -130,11 +130,15 @@
                 <x-form.select name="city_id" label="Город (cityId из формы)" :options="['' => '—'] + $citiesOptionsById" :value="old('city_id', (string) ($driver->city_id ?? ''))" />
             </x-form.row>
 
-            <x-form.row cols="3">
+            <x-form.row cols="4">
                 <x-form.select name="vehicle_type_id" label="Класс авто" :options="$vehicleTypes" :value="old('vehicle_type_id', $driver->vehicle_type_id)" required />
+
                 <x-form.select name="driver_group_id" label="Группа исполнителей (опц.)" :options="['' => '—'] + $driverGroups->toArray()"
                     :value="old('driver_group_id', $driver->driver_group_id)" />
+
                 <x-form.toggle name="supports_terminal" label="Поддержка терминала" :checked="old('supports_terminal', (bool) $driver->supports_terminal)" />
+
+                <x-form.toggle name="is_loader" label="Водитель-грузчик" :checked="old('is_loader', (bool) $driver->is_loader)" />
             </x-form.row>
 
             <x-form.row cols="3">
