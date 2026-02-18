@@ -39,6 +39,8 @@ class VehicleRequest extends FormRequest
             'options_json'    => ['nullable', 'string'],
 
             'body_type_id'   => ['nullable', 'exists:vehicle_body_types,id'],
+            'passenger_seats' => ['nullable', 'integer', 'min:1'],
+            'actual_capacity_kg' => ['nullable', 'integer', 'min:0'],
 
             'loading_types'  => ['nullable', 'array'],
             'loading_types.*' => ['integer', 'exists:vehicle_loading_types,id'],

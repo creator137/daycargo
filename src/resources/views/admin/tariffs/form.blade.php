@@ -13,7 +13,7 @@
 
             {{-- БАЗОВЫЕ НАСТРОЙКИ --}}
             <x-form.row cols="2">
-                <x-form.select name="vehicle_type_id" label="Тип кузова" :options="$vehicleTypes" :value="old('vehicle_type_id', $tariff->vehicle_type_id)" required />
+                <x-form.select name="vehicle_type_id" label="Тип авто" :options="$vehicleTypes" :value="old('vehicle_type_id', $tariff->vehicle_type_id)" required />
 
                 <x-form.select name="scope_type" label="Область действия" :options="$scopeOptions" :value="old('scope_type', $tariff->scope_type)" required />
             </x-form.row>

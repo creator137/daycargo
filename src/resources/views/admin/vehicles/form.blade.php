@@ -47,9 +47,15 @@
                 <x-form.toggle name="is_rent" label="Арендный" :checked="old('is_rent', (bool) $vehicle->is_rent)" />
             </x-form.row>
 
-            <x-form.row cols="2">
+            <x-form.row cols="3">
                 <x-form.select name="body_type_id" label="Тип кузова" :options="['' => '—'] + $bodyTypes->toArray()" :value="old('body_type_id', (string) ($vehicle->body_type_id ?? ''))" />
+                <x-form.input name="passenger_seats" type="number" step="1" min="1" label="Кол-во пассажирских мест"
+                    :value="old('passenger_seats', $vehicle->passenger_seats)" />
+                <x-form.input name="actual_capacity_kg" type="number" step="1" min="0"
+                    label="Фактическая грузоподъёмность, кг" :value="old('actual_capacity_kg', $vehicle->actual_capacity_kg)" />
+            </x-form.row>
 
+            <x-form.row cols="1">
                 <x-form.multiselect-checkboxes name="loading_types" label="Виды погрузки" :options="$loadingTypes->toArray()"
                     :values="old('loading_types', $vehicle->loading_types ?? [])" :columns="2" />
             </x-form.row>

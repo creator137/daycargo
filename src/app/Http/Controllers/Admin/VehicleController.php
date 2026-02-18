@@ -9,10 +9,13 @@ use App\Models\VehicleType;
 use App\Models\Driver;
 use App\Models\City;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class VehicleController extends Controller
 {
+    private ?bool $hasVehicleExtraCapacityColumns = null;
+
     public function __construct()
     {
         $this->authorizeResource(Vehicle::class, 'vehicle');
@@ -121,6 +124,7 @@ class VehicleController extends Controller
     public function store(VehicleRequest $request)
     {
         $data = $request->validated();
+        $data = $this->stripUnavailableVehicleExtraFields($data);
 
         // Загрузка фото
         if ($request->hasFile('photo')) {
@@ -151,6 +155,7 @@ class VehicleController extends Controller
     public function update(VehicleRequest $request, Vehicle $vehicle)
     {
         $data = $request->validated();
+        $data = $this->stripUnavailableVehicleExtraFields($data);
 
         // Новое фото (старое удаляем по желанию)
         if ($request->hasFile('photo')) {
@@ -183,5 +188,21 @@ class VehicleController extends Controller
         $vehicle->save();
 
         return back()->with('success', 'Статус изменён.');
+    }
+
+    private function stripUnavailableVehicleExtraFields(array $data): array
+    {
+        if ($this->hasVehicleExtraCapacityColumns === null) {
+            $this->hasVehicleExtraCapacityColumns = Schema::hasColumns('vehicles', [
+                'passenger_seats',
+                'actual_capacity_kg',
+            ]);
+        }
+
+        if (! $this->hasVehicleExtraCapacityColumns) {
+            unset($data['passenger_seats'], $data['actual_capacity_kg']);
+        }
+
+        return $data;
     }
 }

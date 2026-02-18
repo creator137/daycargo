@@ -31,6 +31,8 @@ class Vehicle extends Model
         'dimensions',
         'body_type_id',
         'loading_types',
+        'passenger_seats',
+        'actual_capacity_kg',
     ];
 
     protected $casts = [
@@ -40,6 +42,8 @@ class Vehicle extends Model
         'not_in_list' => 'bool',
         'dimensions'  => 'array',
         'loading_types' => 'array',
+        'passenger_seats' => 'integer',
+        'actual_capacity_kg' => 'integer',
     ];
 
     public function driver()
