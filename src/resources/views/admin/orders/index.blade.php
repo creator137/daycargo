@@ -11,32 +11,28 @@
         @endcan
     </x-page.header>
 
-    {{-- ФИЛЬТРЫ --}}
     <x-ui.card class="mb-4">
         <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-3">
             <x-form.select name="status" label="Статус" :options="[
                 'all' => 'Все',
                 'new' => 'Новый',
-                'assigning' => 'Назначение',
-                'accepted' => 'Принят',
-                'arrived' => 'Подача',
+                'search' => 'Поиск',
+                'assigned' => 'Назначен',
+                'en_route' => 'К подаче',
                 'loading' => 'Погрузка',
-                'driving' => 'В пути',
+                'in_progress' => 'Выполняется',
                 'waiting' => 'Ожидание',
-                'completed' => 'Завершён',
-                'cancelled' => 'Отменён',
-                'failed' => 'Неуспех',
-                'refund' => 'Возврат',
+                'paused' => 'Пауза',
+                'completed' => 'Завершен',
+                'canceled' => 'Отменен',
+                'failed' => 'Срыв',
             ]" :value="$filters['status']" />
 
-            <x-form.select name="type" label="Тип" :options="[
+            <x-form.select name="type" label="Срочность" :options="[
                 '' => '—',
-                'courier' => 'Курьер',
                 'now' => 'Срочно',
-                'schedule' => 'По времени',
-                'cargo' => 'Грузовой',
-                'move' => 'Переезд',
-                'intercity' => 'Межгород',
+                'preorder' => 'По времени',
+                'offer' => 'Офер',
             ]" :value="$filters['type']" />
 
             <x-form.select name="city_id" label="Город" :options="['' => '—'] + $cityOptions" :value="$filters['city_id']" />
@@ -64,15 +60,22 @@
         </form>
     </x-ui.card>
 
-    {{-- СПИСОК --}}
     <x-ui.card>
-        <x-ui.table :headers="['№', 'Дата', 'Город', 'Тип', 'Статус', 'Клиент', 'Откуда → Куда', 'Сумма', 'Оплата', 'Действия']">
+        <x-ui.table :headers="['№', 'Дата', 'Город', 'Срочность', 'Статус', 'Клиент', 'Откуда → Куда', 'Сумма', 'Оплата', 'Действия']">
             @forelse($items as $o)
+                @php
+                    $typeLabel = match ($o->type) {
+                        'now' => 'Срочно',
+                        'preorder' => 'По времени',
+                        'offer' => 'Офер',
+                        default => $o->type,
+                    };
+                @endphp
                 <tr>
                     <td class="whitespace-nowrap font-medium">{{ $o->number }}</td>
                     <td class="whitespace-nowrap">{{ $o->created_at->format('d.m.Y H:i') }}</td>
                     <td class="whitespace-nowrap">{{ $o->city }}</td>
-                    <td class="whitespace-nowrap">{{ strtoupper($o->type) }}</td>
+                    <td class="whitespace-nowrap">{{ $typeLabel }}</td>
                     <td class="whitespace-nowrap">
                         <x-badges.order-status :status="$o->status" />
                     </td>
@@ -88,8 +91,7 @@
                             <div class="text-xs text-slate-500">→ {{ $o->to_address }}</div>
                         @endif
                     </td>
-                    <td class="whitespace-nowrap">{{ number_format((float) $o->price_total, 0, ',', ' ') }}
-                        {{ $o->currency }}</td>
+                    <td class="whitespace-nowrap">{{ number_format((float) $o->price_total, 0, ',', ' ') }} {{ $o->currency }}</td>
                     <td class="whitespace-nowrap">
                         @switch($o->payment_method)
                             @case('cash')
@@ -121,20 +123,21 @@
                             @can('delete', $o)
                                 <form method="post" action="{{ route('admin.orders.destroy', $o) }}"
                                     onsubmit="return confirm('Удалить заказ?')">
-                                    @csrf @method('DELETE')
+                                    @csrf
+                                    @method('DELETE')
                                     <x-ui.button type="submit" size="xs" variant="danger">Удалить</x-ui.button>
                                 </form>
                             @endcan
                         </div>
                     </td>
                 </tr>
-                @empty
-                    <tr>
-                        <td colspan="10"><x-ui.alert tone="muted">Заказов не найдено.</x-ui.alert></td>
-                    </tr>
-                @endforelse
-            </x-ui.table>
+            @empty
+                <tr>
+                    <td colspan="10"><x-ui.alert tone="muted">Заказов не найдено.</x-ui.alert></td>
+                </tr>
+            @endforelse
+        </x-ui.table>
 
-            <div class="mt-4">{{ $items->links() }}</div>
-        </x-ui.card>
-    @endsection
+        <div class="mt-4">{{ $items->links() }}</div>
+    </x-ui.card>
+@endsection

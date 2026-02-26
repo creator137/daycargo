@@ -18,14 +18,15 @@ class OrderRequest extends FormRequest
             'city_id'            => ['nullable', 'integer', 'exists:cities,id'],
             'city'               => ['required', 'string', 'max:100'],
 
-            'type'               => ['required', 'in:courier,now,schedule,cargo,move,intercity'],
-            'source'             => ['nullable', 'in:web,app,phone,partner,admin'],
+            'type'               => ['required', 'in:now,preorder,offer'],
+            'service_category'   => ['nullable', 'in:courier,cargo,move,intercity,other'],
+            'source'             => ['nullable', 'in:operator,client_app,site,api,partner'],
             'priority'           => ['nullable', 'integer', 'between:0,10'],
-            'status'             => ['required', 'in:new,assigning,accepted,arrived,loading,driving,waiting,completed,cancelled,failed,refund'],
+            'status'             => ['required', 'in:new,search,assigned,en_route,loading,in_progress,waiting,paused,completed,canceled,failed'],
 
-            'client_id'          => ['nullable', 'exists:clients,id'],
+            'client_id'          => ['required', 'exists:clients,id'],
             'organization_id'    => ['nullable', 'exists:organizations,id'],
-            'payer_type'         => ['required', 'in:client,organization,cashless,other'],
+            'payer_type'         => ['required', 'in:client,organization'],
 
             'contact_name'       => ['nullable', 'string', 'max:255'],
             'contact_phone'      => ['nullable', 'string', 'max:32'],
@@ -49,6 +50,7 @@ class OrderRequest extends FormRequest
             'options.child_seat' => ['sometimes', 'boolean'],
             'options.wagon'      => ['sometimes', 'boolean'],
             'options.refrigerator' => ['sometimes', 'boolean'],
+            'options.furniture_assembly' => ['sometimes', 'boolean'],
 
             'distance_km_est'    => ['nullable', 'numeric', 'min:0'],
             'duration_min_est'   => ['nullable', 'integer', 'min:0'],
@@ -56,10 +58,10 @@ class OrderRequest extends FormRequest
             'driver_id'          => ['nullable', 'exists:drivers,id'],
             'vehicle_id'         => ['nullable', 'exists:vehicles,id'],
 
-            'assign_strategy'    => ['nullable', 'in:manual,broadcast,nearest,group'],
+            'assign_strategy'    => ['nullable', 'in:manual,auto_broadcast,direct_offer'],
             'broadcast_radius_km' => ['nullable', 'numeric', 'min:0'],
 
-            'calc_schema'        => ['nullable', 'in:by_tariff,fixed,manual'],
+            'calc_schema'        => ['nullable', 'in:by_tariff,fixed_price,hourly,per_km,mixed'],
 
             'price_base'         => ['nullable', 'numeric', 'min:0'],
             'price_surge'        => ['nullable', 'numeric', 'min:0'],
@@ -92,6 +94,11 @@ class OrderRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $b = fn($k) => $this->boolean($k);
+        $viaPoints = collect((array) $this->input('via_points', []))
+            ->map(fn($v) => trim((string) $v))
+            ->filter()
+            ->values()
+            ->all();
 
         $this->merge([
             'blacklist_check' => $b('blacklist_check'),
@@ -100,6 +107,7 @@ class OrderRequest extends FormRequest
             'fragile'         => $b('fragile'),
             'lift_required'   => $b('lift_required'),
             'is_return_trip'  => $b('is_return_trip'),
+            'via_points'      => $viaPoints,
         ]);
     }
 }

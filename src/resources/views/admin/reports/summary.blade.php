@@ -43,11 +43,8 @@
                 <select name="type" id="type" class="w-full rounded-md border-slate-300 text-sm">
                     <option value="">Все</option>
                     <option value="now" {{ $type === 'now' ? 'selected' : '' }}>Срочно</option>
-                    <option value="schedule" {{ $type === 'schedule' ? 'selected' : '' }}>По времени</option>
-                    <option value="courier" {{ $type === 'courier' ? 'selected' : '' }}>Курьер</option>
-                    <option value="cargo" {{ $type === 'cargo' ? 'selected' : '' }}>Грузовой</option>
-                    <option value="move" {{ $type === 'move' ? 'selected' : '' }}>Переезд</option>
-                    <option value="intercity" {{ $type === 'intercity' ? 'selected' : '' }}>Межгород</option>
+                    <option value="preorder" {{ $type === 'preorder' ? 'selected' : '' }}>По времени</option>
+                    <option value="offer" {{ $type === 'offer' ? 'selected' : '' }}>Офер</option>
                 </select>
             </div>
             <div class="md:col-span-5 flex gap-2">

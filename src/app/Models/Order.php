@@ -12,6 +12,7 @@ class Order extends Model
         'city',
         'city_id',
         'type',
+        'service_category',
         'source',
         'priority',
         'status',

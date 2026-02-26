@@ -49,15 +49,32 @@ class OrderController extends Controller
             ->toArray();
     }
 
-    /** Тарифы: безопасный фоллбек если колонки name нет */
+    /** Тарифы c metadata для UI-фильтрации по клиенту */
     private function tariffOptions(): array
     {
-        if (Schema::hasColumn('tariffs', 'name')) {
-            return Tariff::orderBy('name')->pluck('name', 'id')->toArray();
-        }
+        $hasName = Schema::hasColumn('tariffs', 'name');
 
-        return Tariff::orderBy('id')->get()
-            ->mapWithKeys(fn($t) => [$t->id => 'Тариф #' . $t->id])
+        return Tariff::query()
+            ->orderBy('id')
+            ->get()
+            ->map(function (Tariff $tariff) use ($hasName) {
+                $baseLabel = ($hasName && !empty($tariff->name))
+                    ? $tariff->name
+                    : ('Тариф #' . $tariff->id);
+
+                $scopeLabel = match ($tariff->scope_type) {
+                    'customer' => 'Клиент #' . (int) $tariff->scope_id,
+                    'integration' => 'Интеграция #' . (int) $tariff->scope_id,
+                    default => 'Глобальный',
+                };
+
+                return [
+                    'id' => $tariff->id,
+                    'label' => $baseLabel . ' · ' . $scopeLabel,
+                    'scope_type' => (string) $tariff->scope_type,
+                    'scope_id' => $tariff->scope_id ? (int) $tariff->scope_id : null,
+                ];
+            })
             ->all();
     }
 
@@ -102,7 +119,7 @@ class OrderController extends Controller
     /** Список */
     public function index(Request $req)
     {
-        $status = $req->string('status')->toString(); // new|assigning|...|all
+        $status = $req->string('status')->toString(); // new|search|...|all
         $type   = $req->string('type')->toString();   // now|later|...
         $cityId = $req->integer('city_id');
         $pay    = $req->string('payment_method')->toString();
@@ -129,7 +146,7 @@ class OrderController extends Controller
 
         // Быстрый фильтр «Только новые»
         if ($req->boolean('only_new')) {
-            $q->whereIn('status', ['new', 'assigning']);
+            $q->whereIn('status', ['new', 'search']);
         }
 
         $items = $q->paginate(20)->withQueryString();
@@ -161,7 +178,12 @@ class OrderController extends Controller
             'payment_method' => 'cash',
             'currency'       => 'RUB',
             'priority'       => 0,
-            'options'        => ['child_seat' => false, 'wagon' => false, 'refrigerator' => false],
+            'options'        => [
+                'child_seat' => false,
+                'wagon' => false,
+                'refrigerator' => false,
+                'furniture_assembly' => false,
+            ],
         ]);
 
         return view('admin.orders.form', [
@@ -180,7 +202,13 @@ class OrderController extends Controller
     /** Сохранение */
     public function store(OrderRequest $request)
     {
-        Order::create($request->validated());
+        $data = $this->normalizeOrderPayload($request->validated());
+
+        if (empty($data['number'])) {
+            $data['number'] = $this->generateOrderNumber();
+        }
+
+        Order::create($data);
         return redirect()->route('admin.orders.index')->with('success', 'Заказ создан.');
     }
 
@@ -203,8 +231,76 @@ class OrderController extends Controller
     /** Обновление */
     public function update(OrderRequest $request, Order $order)
     {
-        $order->update($request->validated());
+        $data = $this->normalizeOrderPayload($request->validated());
+        $order->update($data);
         return redirect()->route('admin.orders.index')->with('success', 'Сохранено.');
+    }
+
+    /**
+     * Совместимость со stage-окружениями, где миграция с service_category
+     * еще не применена: не отправляем отсутствующие колонки в insert/update.
+     */
+    private function normalizeOrderPayload(array $data): array
+    {
+        if (!Schema::hasColumn('orders', 'service_category')) {
+            unset($data['service_category']);
+        }
+
+        // В orders много numeric полей NOT NULL с default 0.
+        // Пустые инпуты приходят как null и ломают insert/update.
+        $zeroIfNull = [
+            'priority',
+            'helper_count',
+            'price_base',
+            'price_surge',
+            'price_options',
+            'price_waiting',
+            'price_loading',
+            'price_other',
+            'price_discount',
+            'promo_discount',
+            'bonus_spent',
+            'price_total',
+            'prepaid_amount',
+            'paid_amount',
+            'debt_amount',
+        ];
+
+        foreach ($zeroIfNull as $field) {
+            if (array_key_exists($field, $data) && ($data[$field] === null || $data[$field] === '')) {
+                $data[$field] = 0;
+            }
+        }
+
+        $defaultIfNull = [
+            'source' => 'operator',
+            'currency' => 'RUB',
+            'calc_schema' => 'by_tariff',
+            'assign_strategy' => 'manual',
+        ];
+
+        foreach ($defaultIfNull as $field => $default) {
+            if (array_key_exists($field, $data) && ($data[$field] === null || $data[$field] === '')) {
+                $data[$field] = $default;
+            }
+        }
+
+        return $data;
+    }
+
+    private function generateOrderNumber(): string
+    {
+        $prefix = 'ORD-' . now()->format('Y') . '-';
+
+        for ($i = 0; $i < 50; $i++) {
+            $number = $prefix . str_pad((string) random_int(1, 999999), 6, '0', STR_PAD_LEFT);
+            if (!Order::where('number', $number)->exists()) {
+                return $number;
+            }
+        }
+
+        // Практически недостижимый fallback.
+        return 'ORD-' . now()->format('YmdHis') . '-' . random_int(100000, 999999);
     }
 
     /** Удаление */
